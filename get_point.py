@@ -1,7 +1,3 @@
-# @Time    : 2020/12/15 23:17
-# @Author  : Chen Yuansheng
-# @FileName: 1.py
-# @Software: PyCharm
 import os
 import time
 import random
