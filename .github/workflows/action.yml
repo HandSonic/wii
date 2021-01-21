@@ -23,4 +23,5 @@ jobs:
       env:
         USERNAME: ${{ secrets.USERNAME }}
         PASSWORD: ${{ secrets.PASSWORD }}
+        SEVERCHAN: ${{ secrets.SEVERCHAN }}
       run: python get_point.py

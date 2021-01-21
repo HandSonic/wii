@@ -114,6 +114,39 @@ def login(username: str, password: str) -> req_Session:
     return s
 
 
+# 每日签到
+def daily_sign_in(s: req_Session, number_c: int) -> str:
+    payload = {
+        'id': "dc_signin"
+    }
+    # 访问签到页面
+    page = s.get(url="https://www.91wii.com/plugin.php?id=dc_signin", params=payload)
+    try:
+        # 正则获取formHash
+        formhash = re.search(r'formhash=(.+)"', page.text, re.M | re.I).group(1)
+        payload = {
+            'formhash': formhash,
+            'signsubmit': 'yes',
+            'handlekey': 'signin',
+            'emotid': 1,
+            'referer': 'https://www.91wii.com/plugin.php?id=dc_signin',
+            'content': 'Happy Every Day'
+        }
+        response = s.post(url="https://www.91wii.com/plugin.php?id=dc_signin:sign&inajax=1", params=payload)
+        result = re.search(r'(签到成功.*)\'', response.text, re.M | re.I).group(1)
+        return result
+    except Exception:
+        return "签到失败"
+
+
+# Sever酱推送消息
+def severchan_push(text: str, desp: str = ""):
+    if not severchan_key:
+        print("Sever酱未配置")
+    else:
+        requests.get("https://sc.ftqq.com/{}.send?text={}?&desp={}".format(severchan_key, text, desp))
+
+
 # 通过抓取用户设置页面的标题检查是否登录成功
 def check_login_status(s: req_Session, number_c: int) -> bool:
     test_url = "https://www.91wii.com/home.php?mod=spacecp"
@@ -135,7 +168,7 @@ def check_login_status(s: req_Session, number_c: int) -> bool:
 
 
 # 抓取并打印输出帐户当前积分
-def print_current_points(s: req_Session):
+def print_current_points(s: req_Session) -> str:
     test_url = "https://www.91wii.com/forum.php"
     res = s.get(test_url)
     res.raise_for_status()
@@ -147,12 +180,13 @@ def print_current_points(s: req_Session):
     else:
         print("无法获取帐户积分，可能页面存在错误或者未登录！")
     time.sleep(3)
+    return points[0]
 
 
 # 依次访问随机生成的用户空间链接获取积分
 def get_points(s: req_Session, number_c: int):
     if check_login_status(s, number_c):
-        print_current_points(s)  # 打印帐户当前积分
+        before_point = print_current_points(s)  # 打印帐户当前积分
         url_list = randomly_gen_uspace_url()
         # 依次访问用户空间链接获取积分，出现错误时不中断程序继续尝试访问下一个链接
         for i in range(len(url_list)):
@@ -165,9 +199,22 @@ def get_points(s: req_Session, number_c: int):
             except Exception as e:
                 print("链接访问异常：" + str(e))
             continue
-        print_current_points(s)  # 再次打印帐户当前积分
+        # 每日签到
+        result = daily_sign_in(s, number_c)
+        now_point = print_current_points(s)  # 再次打印帐户当前积分
+        if not severchan_key:
+            print("Sever酱未配置")
+        else:
+            severchan_context = '''帐户运行前积分：{}
+                           现在帐户积分:{}
+                           {}'''.format(before_point, now_point, result)
+            severchan_push("91Wii第{}个账户运行完毕".format(number_c), severchan_context)
     else:
         print("请检查你的帐户是否正确！")
+        if not severchan_key:
+            print("Sever酱未配置")
+        else:
+            severchan_push("91Wii第{}个账户失败".format(number_c), "请检查你的帐户是否正确！")
 
 
 # 打印输出当前ip地址
@@ -185,6 +232,8 @@ def print_my_ip():
 if __name__ == "__main__":
     username = os.environ["USERNAME"]
     password = os.environ["PASSWORD"]
+    severchan_key = os.environ["SEVERCHAN"]
+
     # 分割用户名和密码为列表
     user_list = username.split(",")
     passwd_list = password.split(",")
@@ -205,6 +254,7 @@ if __name__ == "__main__":
                 get_points(s, i + 1)
                 print("*" * 30)
             except Exception as e:
+                severchan_push("91Wii第{}个账户执行失败".format(i+1))
                 print("程序执行异常：" + str(e))
                 print("*" * 30)
             continue
