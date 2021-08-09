@@ -15,7 +15,7 @@ def randomly_gen_uspace_url() -> list:
     # 访问小黑屋用户空间不会获得积分、生成的随机数可能会重复，这里多生成两个链接用作冗余
     for i in range(20):
         uid = random.randint(10000, 50000)
-        url = "https://www.91wii.com/space-uid-{}.html".format(str(uid))
+        url = "https://bbs.naxgen.cn/space-uid-{}.html".format(str(uid))
         url_list.append(url)
     return url_list
 
@@ -34,7 +34,7 @@ def check_anti_cc() -> dict:
     headers = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
     }
-    home_page = "https://www.91wii.com/forum.php"
+    home_page = "https://bbs.naxgen.cn/forum.php"
     res = requests.get(home_page, headers=headers)
     aes_keys = re.findall('toNumbers\("(.*?)"\)', res.text)
     cookie_name = re.findall('cookie="(.*?)="', res.text)
@@ -86,12 +86,12 @@ def login(username: str, password: str) -> req_Session:
         "user-agent": "Mozilla/5.0 (Linux; Android 9; MI 9 SE Build/PKQ1.181121.001; wv) AppleWebKit/537.36 "
                       "(KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.126 MQQBrowser/6.2 TBS/045111 Mobile Safari/537.36 "
                       "MMWEBID/1500 MicroMessenger/7.0.11.1600(0x27000B33) Process/tools NetType/WIFI Language/zh_CN ABI/arm64",
-        "origin": "https://www.91wii.com/",
-        "referer": "https://www.91wii.com/forum.php",
+        "origin": "https://bbs.naxgen.cn/",
+        "referer": "https://bbs.naxgen.cn/forum.php",
     }
 
-    # login_url = "https://www.91wii.com/forum.php/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1&mobile=2"
-    login_url = "https://www.91wii.com/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&" \
+    # login_url = "https://bbs.naxgen.cn/forum.php/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1&mobile=2"
+    login_url = "https://bbs.naxgen.cn/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&" \
                 "lssubmit=yes&fastloginfield=username&username={}&password={}&quickforward=yes&handlekey=ls&mobile=2".format(username,password)
     # login_data = {
     #     "fastloginfield": "username",
@@ -120,7 +120,7 @@ def daily_sign_in(s: req_Session, number_c: int) -> str:
         'id': "dc_signin"
     }
     # 访问签到页面
-    page = s.get(url="https://www.91wii.com/plugin.php?id=dc_signin", params=payload)
+    page = s.get(url="https://bbs.naxgen.cn/plugin.php?id=dc_signin", params=payload)
     try:
         # 正则获取formHash
         formhash = re.search(r'formhash=(.+)"', page.text, re.M | re.I).group(1)
@@ -129,10 +129,10 @@ def daily_sign_in(s: req_Session, number_c: int) -> str:
             'signsubmit': 'yes',
             'handlekey': 'signin',
             'emotid': 1,
-            'referer': 'https://www.91wii.com/plugin.php?id=dc_signin',
+            'referer': 'https://bbs.naxgen.cn/plugin.php?id=dc_signin',
             'content': 'Happy Every Day'
         }
-        response = s.post(url="https://www.91wii.com/plugin.php?id=dc_signin:sign&inajax=1", params=payload)
+        response = s.post(url="https://bbs.naxgen.cn/plugin.php?id=dc_signin:sign&inajax=1", params=payload)
         result = re.search(r'(签到成功.*)\'', response.text, re.M | re.I).group(1)
         return result
     except Exception:
@@ -149,7 +149,7 @@ def severchan_push(text: str, desp: str = ""):
 
 # 通过抓取用户设置页面的标题检查是否登录成功
 def check_login_status(s: req_Session, number_c: int) -> bool:
-    test_url = "https://www.91wii.com/home.php?mod=spacecp"
+    test_url = "https://bbs.naxgen.cn/home.php?mod=spacecp"
     res = s.get(test_url)
     res.raise_for_status()
     # res.encoding = "utf-8"
@@ -169,7 +169,7 @@ def check_login_status(s: req_Session, number_c: int) -> bool:
 
 # 抓取并打印输出帐户当前积分
 def print_current_points(s: req_Session) -> str:
-    test_url = "https://www.91wii.com/forum.php"
+    test_url = "https://bbs.naxgen.cn/forum.php"
     res = s.get(test_url)
     res.raise_for_status()
     # res.encoding = "utf-8"
